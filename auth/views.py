@@ -1,62 +1,64 @@
 """Views for auth app."""
 import uuid
 
-import requests
 from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .constants import LINKEDIN_OAUTH_URL
 from .serializers import LinkedInCallbackSerializer
+from .services import UserAuthorizationService
 
 
 class LinkedInAuthorizationView(APIView):
-    def get(self, request, *args, **kwargs):
+    """
+    View for initiating the LinkedIn OAuth 2.0 authorization process.
+
+    This view generates a unique random string as the 'state' parameter,
+    includes it in the LinkedIn authorization URL, and redirects the user
+    to LinkedIn for authentication and authorization.
+    """
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        """
+        Handles GET requests for initiating LinkedIn OAuth 2.0 authorization.
+
+        :param request: The HTTP request.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :return: Redirects the user to the LinkedIn authorization URL.
+        """
         state = str(uuid.uuid4())
         authorization_url = f'{LINKEDIN_OAUTH_URL}authorization?response_type=code&client_id={settings.LINKEDIN_CLIENT_ID}&redirect_uri={settings.LINKEDIN_REDIRECT_URI}&state={state}&scope=profile%20email%20openid'
         return redirect(authorization_url)
 
 
 class LinkedInCallbackView(APIView):
-    def get(self, request, *args, **kwargs):
-        serializer = LinkedInCallbackSerializer(data=request.GET, context={'request': request})
+    """
+    View for handling the callback after a successful LinkedIn OAuth 2.0 authorization.
+
+    This view validates the callback parameters, exchanges the authorization code for an access token,
+    and fetches user data from LinkedIn. The user data is then returned in the response.
+    """
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        """
+        Handles GET requests for processing the LinkedIn OAuth 2.0 callback.
+
+        :param request: The HTTP request.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :return: JSON response containing LinkedIn user data.
+        """
+        serializer = LinkedInCallbackSerializer(data=request.GET)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
-        code = validated_data['code']
+        authorization_service = UserAuthorizationService()
+        user_data = authorization_service.get_user(validated_data['code'])
 
-        # Check state for security
-        # Perform token exchange to get access token
-        access_token_url = f'{LINKEDIN_OAUTH_URL}accessToken'
-        params = {
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': settings.LINKEDIN_REDIRECT_URI,
-            'client_id': settings.LINKEDIN_CLIENT_ID,
-            'client_secret': settings.LINKEDIN_CLIENT_SECRET,
-        }
-        response = requests.post(access_token_url, data=params)
-        access_token = response.json().get('access_token')
-
-        # Use the access token to fetch user data
-        user_data_url = 'https://api.linkedin.com/v2/userinfo'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        user_response = requests.get(user_data_url, headers=headers)
-        user_data = user_response.json()
-
-        # Extract relevant user data (adjust as needed)
-        linkedin_id = user_data.get('id')
-        first_name = user_data.get('localizedFirstName')
-        last_name = user_data.get('localizedLastName')
-        email = user_data.get('emailAddress')
-
-        # Process or save the user data as needed
-        # For simplicity, return user data as JSON
-        return Response({
-            'linkedin_id': linkedin_id,
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': email,
-        }, status=status.HTTP_200_OK)
+        return Response(user_data, status=status.HTTP_200_OK)
