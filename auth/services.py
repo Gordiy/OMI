@@ -18,13 +18,13 @@ class UserAuthorizationService:
         self._authorization_code = authorization_code
         self._dao_service = UserAuthorizationDAOService
 
-    def get_user_data(self) -> dict:
+    def save_user_data(self) -> None:
         """
-        Get user data from LinkedIn.
+        Save user data from LinkedIn.
 
         :raises ValidationError: Raised if access token is not received or user information is not received.
 
-        :return: User information including id, name, surname, and email.
+        :return:
         """
         access_token = self._dao_service.get_access_token(self._authorization_code)
 
@@ -42,9 +42,3 @@ class UserAuthorizationService:
         email = user_data.get('email')
 
         self._dao_service.save_user(email, email, name, surname)
-
-        return {
-            'name': name,
-            'surname': surname,
-            'email': email
-        }
