@@ -58,7 +58,7 @@ class LinkedInCallbackView(APIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
 
-        authorization_service = UserAuthorizationService()
-        user_data = authorization_service.get_user(validated_data['code'])
+        authorization_service = UserAuthorizationService(validated_data['code'])
+        user_data = authorization_service.get_user_data()
 
         return Response(user_data, status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 """DAO services for auth app."""
 import requests
 from django.conf import settings
+from django.contrib.auth.models import User
 
 from .constants import LINKEDIN_OAUTH_URL
 
@@ -41,3 +42,30 @@ class UserAuthorizationDAOService:
         user_response = requests.get(user_data_url, headers=headers)
 
         return user_response.json()
+    
+    @staticmethod
+    def save_user(username: str, email: str, first_name: str, last_name: str) -> None:
+        """
+        Save or update a user in the Django User model based on the provided information.
+
+        If a user with the specified `username` does not exist, a new user is created.
+        If the user already exists, their information is updated with the provided data.
+
+        :param username: The unique identifier for the user (e.g., email).
+        :param email: The email address of the user.
+        :param first_name: The first name of the user.
+        :param last_name: The last name of the user.
+
+        :return: None
+        """
+        user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+        
+        if not created:
+            user.username = username
+
+        # Update user information
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+
+        user.save()
