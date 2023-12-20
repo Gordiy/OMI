@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+
     'auth',
 ]
 
@@ -129,3 +131,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# LinkedIN
+LINKEDIN_REDIRECT_URI = os.getenv('LINKEDIN_REDIRECT_URI', None)
+LINKEDIN_CLIENT_ID = os.getenv('LINKEDIN_CLIENT_ID', None)
+LINKEDIN_CLIENT_SECRET = os.getenv('LINKEDIN_CLIENT_SECRET', None)
