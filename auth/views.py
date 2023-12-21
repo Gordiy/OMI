@@ -54,10 +54,10 @@ class LinkedInCallbackView(APIView):
         :return: JSON response containing LinkedIn user data.
         """
         serializer = LinkedInCallbackSerializer(data=request.GET)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=False)
         validated_data = serializer.validated_data
 
-        authorization_service = UserAuthorizationService(validated_data['code'])
+        authorization_service = UserAuthorizationService(validated_data.get('code'))
         authorization_service.save_user_data()
 
         return redirect(settings.SUCCESS_REDIRECT_URI)
