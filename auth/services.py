@@ -34,7 +34,7 @@ class UserAuthorizationService:
 
         error = user_data.get('error_description')
         if error:
-            redirect(settings.CANCEL_REDIRECT_URI)
+            return redirect(settings.CANCEL_REDIRECT_URI)
 
         name = user_data.get('given_name')
         surname = user_data.get('family_name')
