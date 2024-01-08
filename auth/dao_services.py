@@ -37,11 +37,22 @@ class UserAuthorizationDAOService:
 
         :return: response data.
         """
+        user_info = UserAuthorizationDAOService.request_userinfo(access_token)
+
+        return user_info.json()
+    
+    @staticmethod
+    def request_userinfo(access_token: str) -> requests.Response:
+        """
+        Request userinfo from LinkedIN.
+
+        :param access_token: authorization access_token.
+
+        :return: response.
+        """
         user_data_url = 'https://api.linkedin.com/v2/userinfo'
         headers = {'Authorization': f'Bearer {access_token}'}
-        user_response = requests.get(user_data_url, headers=headers)
-
-        return user_response.json()
+        return requests.get(user_data_url, headers=headers)
     
     @staticmethod
     def save_user(username: str, email: str, first_name: str, last_name: str) -> None:

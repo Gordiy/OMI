@@ -1,7 +1,9 @@
 """Services for auth app."""
-from .dao_services import UserAuthorizationDAOService
-from django.shortcuts import redirect
 from django.conf import settings
+from django.shortcuts import redirect
+from rest_framework.exceptions import AuthenticationFailed
+
+from .dao_services import UserAuthorizationDAOService
 
 
 class UserAuthorizationService:
@@ -17,13 +19,13 @@ class UserAuthorizationService:
         self._authorization_code = authorization_code
         self._dao_service = UserAuthorizationDAOService
 
-    def save_user_data(self) -> None:
+    def save_user_data(self) -> str:
         """
         Save user data from LinkedIn.
 
         :raises ValidationError: Raised if access token is not received or user information is not received.
 
-        :return:
+        :return: LinkedIn access_token.
         """
         access_token = self._dao_service.get_access_token(self._authorization_code)
 
@@ -41,3 +43,19 @@ class UserAuthorizationService:
         email = user_data.get('email')
 
         self._dao_service.save_user(email, email, name, surname)
+        return access_token
+
+    def validate_access_token(self, access_token: str) -> bool:
+        """
+        Validate auth LinkedIn access token.
+        
+        :param access_token: access token received from LinkedIn.
+
+        :return: True if user is authorized.
+        """
+        userinfo_response = self._dao_service.request_userinfo(access_token)
+
+        if userinfo_response.status_code != 200:
+            raise AuthenticationFailed()
+        
+        return True

@@ -5,10 +5,12 @@ from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 
 from .constants import LINKEDIN_OAUTH_URL
-from .serializers import LinkedInCallbackSerializer
+from .serializers import (LinkedInCallbackSerializer,
+                          ValidateLinkedInAuthTokenSerializer)
 from .services import UserAuthorizationService
 
 
@@ -60,6 +62,16 @@ class LinkedInCallbackView(APIView):
         validated_data = serializer.validated_data
 
         authorization_service = UserAuthorizationService(validated_data.get('code'))
-        authorization_service.save_user_data()
+        access_token = authorization_service.save_user_data()
 
-        return redirect(settings.SUCCESS_REDIRECT_URI)
+        return redirect(f'{settings.SUCCESS_REDIRECT_URI}?access_token={access_token}')
+
+
+class ValidateLinkedInAuthTokenView(APIView):
+    """View for validating LinkedIn authorization token."""
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        serializer = ValidateLinkedInAuthTokenSerializer(data=request.POST)
+
+        serializer.is_valid(raise_exception=True)
+
+        return Response(status=HTTP_200_OK)
