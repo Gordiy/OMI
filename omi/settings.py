@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-cfj-3-n**uc_=d1f8=q8*@km-^^04ap(akmraf19ay$9+01(g*
 DEBUG = os.getenv('DEBUG') == "True"
 
 ALLOWED_HOSTS = ['*']
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
