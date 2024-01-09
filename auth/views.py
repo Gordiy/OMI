@@ -64,7 +64,7 @@ class LinkedInCallbackView(APIView):
         authorization_service = UserAuthorizationService(validated_data.get('code'))
         access_token = authorization_service.save_user_data()
 
-        return redirect(f'{settings.SUCCESS_REDIRECT_URI}?access_token={access_token}')
+        return redirect(f'{settings.SUCCESS_REDIRECT_URI}/code={access_token}')
 
 
 class ValidateLinkedInAuthTokenView(APIView):
